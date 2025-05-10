@@ -50,9 +50,9 @@ jobs:
         with:
           name: client-app
 
-      # Set up Azure CLI
+      # Set up Azure CLI (use version v1 or v1.1)
       - name: Set up Azure CLI
-        uses: azure/setup-azcli@v2  # Use version v2
+        uses: azure/setup-azcli@v1  # Use v1 for compatibility
 
       # Option 1: Login with Azure CLI using device code (manual login)
       - name: Azure CLI login (device code authentication)
