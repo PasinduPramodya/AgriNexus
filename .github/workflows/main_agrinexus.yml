@@ -27,7 +27,7 @@ jobs:
           npm install
           npm run build --if-present
           npm run test --if-present
-      
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -50,16 +50,16 @@ jobs:
         with:
           name: client-app
 
-      # Option 1: Using Azure CLI with device code login (manual interaction)
+      # Set up Azure CLI
       - name: Set up Azure CLI
         uses: azure/setup-azcli@v1
 
+      # Option 1: Login with Azure CLI using device code (manual login)
       - name: Azure CLI login (device code authentication)
         run: |
           az login --use-device-code  # This will prompt for manual login
 
-      # OR Option 2: Using Azure Service Principal (if you want to use secrets)
-      # Uncomment the following section if you prefer using the Azure Service Principal:
+      # OR Option 2: Uncomment below for Service Principal Authentication (using GitHub secrets)
       # - name: Azure Login (using Service Principal credentials)
       #   uses: azure/login@v2
       #   with:
@@ -74,7 +74,3 @@ jobs:
           app-name: 'agrinexus'  # 👈 your Azure Web App name
           slot-name: 'Production'
           package: ./client  # Path to the built project you want to deploy
-
-      # Optional: Output Web App URL
-      - name: Output web app URL
-        run: echo "Web app URL: ${{ steps.deploy-to-webapp.outputs.webapp-url }}"
