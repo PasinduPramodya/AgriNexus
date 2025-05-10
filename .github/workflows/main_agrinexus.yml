@@ -1,77 +1,37 @@
-name: Build and deploy Node.js client app to Azure Web App - agrinexus
+name: Deploy Node.js App (from /client) to Azure (Windows)
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main  # Adjust this if your deployment branch differs
 
 jobs:
-  build:
-    runs-on: windows-latest
-    permissions:
-      contents: read
+  build-and-deploy:
+    runs-on: windows-latest  # Important: App Service uses Windows
+
+    defaults:
+      run:
+        working-directory: ./client  # Set working directory for all steps
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.x'
 
-      - name: Install dependencies and build
-        working-directory: ./client
-        run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+    - name: Install dependencies
+      run: npm install
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: client-app
-          path: ./client  # 👈 Ensure this is pointing to your built project folder
+    - name: Build frontend
+      run: npm run build  # Ensure your build outputs to /client/build
 
-  deploy:
-    runs-on: windows-latest  # Using Windows runner for deployment
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: client-app
-
-      # Set up Azure CLI (updated to the latest version for Windows)
-      - name: Set up Azure CLI
-        uses: azure/setup-azcli@v2  # Updated to v2
-
-      # Option 1: Login with Azure CLI using Service Principal (preferred)
-      - name: Azure Login (Service Principal)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      # Option 2: If using manual device code login, uncomment this block:
-      # - name: Azure CLI login (device code authentication)
-      #   run: |
-      #     az login --use-device-code  # This will prompt for manual login
-
-      # Deploy the app to Azure Web App (ensure the correct path to build)
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
-        with:
-          app-name: 'agrinexus'  # 👈 your Azure Web App name
-          slot-name: 'Production'
-          package: ./client  # 👈 The build output folder, not the entire client directory
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: agrinexus-hgh6e4aff6hhepdz
+        slot-name: production
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ./client
