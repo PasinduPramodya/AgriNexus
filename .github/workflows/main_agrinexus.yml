@@ -8,10 +8,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # You can change this to windows-latest for Windows builds
+    runs-on: windows-latest  # Running on Windows
 
     steps:
-      # Checkout the repository code
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -19,26 +18,29 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'  # Set the Node.js version you need
+          node-version: '16.x'
 
-      # Install dependencies and build the app
+      # Install dependencies (adjust for the subdirectory with package.json)
       - name: Install Dependencies
+        working-directory: .\client  # Specify the subdirectory if package.json is inside 'client/'
         run: |
           npm install
 
+      # Build the application (adjust for the subdirectory with the build files)
       - name: Build Application
+        working-directory: .\client  # Specify the correct path to your build files
         run: |
-          npm run build  # Adjust this command based on your build script
+          npm run build
 
-      # Upload build artifacts (optional if you want to store them for later use)
+      # Upload build artifacts
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: client-app
-          path: ./client  # Adjust the path to where your build files are located
+          path: .\client  # Adjust the path to where your build files are located
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: build  # Ensure deployment happens after the build job
     environment:
       name: 'Production'
@@ -55,7 +57,6 @@ jobs:
       - name: Azure Login
         uses: azure/login@v2
         with:
-          # No need to manually pass client-id, tenant-id, or subscription-id
           token: ${{ secrets.GITHUB_TOKEN }}
 
       # Deploy to Azure Web App
@@ -63,6 +64,6 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}  # Azure Web App name stored as GitHub secret
-          slot-name: 'Production'  # Or the slot you're using
-          package: ./client  # Path to your build output directory
+          slot-name: 'Production'  # Or specify a slot name
+          package: .\client  # Path to your built application
 
