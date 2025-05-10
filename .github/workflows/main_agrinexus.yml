@@ -52,7 +52,7 @@ jobs:
 
       # Set up Azure CLI
       - name: Set up Azure CLI
-        uses: azure/setup-azcli@v1
+        uses: azure/setup-azcli@v2  # Updated to v2
 
       # Option 1: Login with Azure CLI using device code (manual login)
       - name: Azure CLI login (device code authentication)
@@ -74,3 +74,4 @@ jobs:
           app-name: 'agrinexus'  # 👈 your Azure Web App name
           slot-name: 'Production'
           package: ./client  # Path to the built project you want to deploy
+
