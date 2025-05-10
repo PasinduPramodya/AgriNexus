@@ -32,10 +32,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: client-app
-          path: ./client  # 👈 the built project to deploy
+          path: ./client  # 👈 Ensure this is pointing to your built project folder
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # Using Windows runner for deployment
     needs: build
     environment:
       name: 'Production'
@@ -50,29 +50,28 @@ jobs:
         with:
           name: client-app
 
-      # Set up Azure CLI
+      # Set up Azure CLI (updated to the latest version for Windows)
       - name: Set up Azure CLI
-        uses: azure/setup-azcli@v1
+        uses: azure/setup-azcli@v2
 
-      # Option 1: Login with Azure CLI using device code (manual login)
-      - name: Azure CLI login (device code authentication)
-        run: |
-          az login --use-device-code  # This will prompt for manual login
+      # Option 1: Login with Azure CLI using Service Principal (preferred)
+      - name: Azure Login (Service Principal)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # OR Option 2: Uncomment below for Service Principal Authentication (using GitHub secrets)
-      # - name: Azure Login (using Service Principal credentials)
-      #   uses: azure/login@v2
-      #   with:
-      #     client-id: ${{ secrets.AZURE_CLIENT_ID }}
-      #     tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # Option 2: If using manual device code login, uncomment this block:
+      # - name: Azure CLI login (device code authentication)
+      #   run: |
+      #     az login --use-device-code  # This will prompt for manual login
 
+      # Deploy the app to Azure Web App (ensure the correct path to build)
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'agrinexus'  # 👈 your Azure Web App name
           slot-name: 'Production'
-          package: ./client  # Path to the built project you want to deploy
-
-
+          package: ./client  # 👈 The build output folder, not the entire client directory
