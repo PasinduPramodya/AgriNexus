@@ -53,14 +53,13 @@ jobs:
       - name: Azure Login
         uses: azure/login@v2
         with:
-          client-id: agrinexus
-          tenant-id: 44e3cf94-19c9-4e32-96c3-14f5bf01391a
-          subscription-id: f1bc51c1-4291-448b-b3a6-4a964f79af6d
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'agrinexus'
-          slot-name: 'Production'
           package: .
