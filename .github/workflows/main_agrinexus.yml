@@ -1,4 +1,4 @@
-name: Build and Deploy to Azure Web App
+name: Build and deploy Node.js client app to Azure Web App - agrinexus
 
 on:
   push:
@@ -8,65 +8,59 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest  # Running on Windows
+    runs-on: windows-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: '20.x'
 
-      # Install dependencies (adjust for the subdirectory with package.json)
-      - name: Install Dependencies
-        working-directory: .\client  # Specify the subdirectory if package.json is inside 'client/'
+      - name: Install dependencies and build
+        working-directory: ./client
         run: |
           npm install
+          npm run build --if-present
+          npm run test --if-present
 
-      # Build the application (adjust for the subdirectory with the build files)
-      - name: Build Application
-        working-directory: .\client  # Specify the correct path to your build files
-        run: |
-          npm run build
-
-      # Upload build artifacts
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: client-app
-          path: .\client  # Adjust the path to where your build files are located
+          path: ./client
 
   deploy:
-    runs-on: windows-latest
-    needs: build  # Ensure deployment happens after the build job
+    runs-on: ubuntu-latest
+    needs: build
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
-      # Download build artifacts if you uploaded them in the previous step
-      - name: Download build artifacts
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: client-app
 
-      # Azure Login: Use GitHub's built-in OAuth authentication (no need to pass client-id, tenant-id, or subscription-id)
       - name: Azure Login
         uses: azure/login@v2
         with:
-          # No need to pass 'token', instead, GitHub automatically handles the authentication.
-          # Use the default authentication method (OAuth)
-          auth-type: 'OAuth'  # Using GitHub OAuth to authenticate
-          enable-AzPSSession: true
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
         with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}  # Azure Web App name stored as GitHub secret
-          slot-name: 'Production'  # Or specify a slot name
-          package: .\client  # Path to your built application
-
+          app-name: 'agrinexus'
+          slot-name: 'Production'
+          package: .
