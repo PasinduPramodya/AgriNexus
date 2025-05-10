@@ -53,11 +53,14 @@ jobs:
         with:
           name: client-app
 
-      # Azure Login: Use GitHub's built-in OAuth authentication to connect to Azure
+      # Azure Login: Use GitHub's built-in OAuth authentication (no need to pass client-id, tenant-id, or subscription-id)
       - name: Azure Login
         uses: azure/login@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # No need to pass 'token', instead, GitHub automatically handles the authentication.
+          # Use the default authentication method (OAuth)
+          auth-type: 'OAuth'  # Using GitHub OAuth to authenticate
+          enable-AzPSSession: true
 
       # Deploy to Azure Web App
       - name: Deploy to Azure Web App
