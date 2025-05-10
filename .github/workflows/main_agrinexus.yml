@@ -26,11 +26,12 @@ jobs:
           npm run build
 
       - name: Deploy via FTPS
-        uses: SamKirkland/FTP-Deploy-Action@v4
+        uses: appleboy/ftp-action@v0.0.6
         with:
-          server: waws-prod-pn1-035.ftp.azurewebsites.windows.net
+          host: waws-prod-pn1-035.ftp.azurewebsites.windows.net
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          server-dir: /site/wwwroot/
-          local-dir: ./client/build
+          port: 990
+          secure: true
+          target: /site/wwwroot/
+          source: ./client/build
